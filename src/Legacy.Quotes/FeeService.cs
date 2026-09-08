@@ -33,18 +33,32 @@ public class FeeService
     public decimal GetPreviewFee(QuoteRequest r)
     {
         var floor = GetMinimumFee(r.Currency);
+        decimal rate = 0.0m;
 
-        var rate = r.Amount <= 7500m ? 0.0245m
-                 : r.Amount <= 40000m ? 0.0175m
-                 : 0.0110m;
+        if (r.BookedAtUtc < new DateTime(2019, 4, 1))
+        {
+            rate = r.Amount <= 10000m ? 0.0250m
+                     : r.Amount <= 50000m ? 0.0180m
+                     : 0.0125m;
+        }
+        else
+        {
+            rate = r.Amount <= 7500m ? 0.0245m
+                     : r.Amount <= 40000m ? 0.0175m
+                     : 0.0110m;
+        }
+        
 
         if (r.Tier == "PARTNER") rate -= 0.0025m;
 
+        if (r.Tier == "LEGACY_2016") 
+            rate = 0.0200m;
+
         var fee = Math.Round(r.Amount * rate, 2, MidpointRounding.AwayFromZero);
 
-        if (fee < floor) fee = floor;
-
         fee = Math.Round(fee * (1 - r.DiscountPct), 2, MidpointRounding.AwayFromZero);
+
+        if (fee < floor) fee = floor;
 
         if (r.Expedited) fee += 12.50m;
 
@@ -61,6 +75,7 @@ public class FeeService
                 {
                     conn.Open();
                     using (var cmd = new SqlCommand("SELECT CurrencyCode, MinimumFee FROM dbo.CurrencyFeeFloor", conn))
+                    
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
