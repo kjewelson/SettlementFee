@@ -60,7 +60,12 @@ public class FeeService
                 using (var conn = new SqlConnection(_connectionString))
                 {
                     conn.Open();
-                    using (var cmd = new SqlCommand("SELECT CurrencyCode, MinimumFee FROM dbo.CurrencyFeeFloor", conn))
+
+                    var sql = "SELECT CurrencyCode, MinimumFee " +
+                              "FROM dbo.CurrencyFeeFloor " +
+                              "WHERE CurrencyCode = '" + currencyCode + "'";
+
+                    using (var cmd = new SqlCommand(sql, conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -75,7 +80,8 @@ public class FeeService
 
             if (!FloorCache.TryGetValue(currencyCode, out var minimumFee))
             {
-                throw new InvalidOperationException("No fee floor configured for " + currencyCode);
+                throw new InvalidOperationException(
+                    "No fee floor configured for " + currencyCode);
             }
 
             return minimumFee;
