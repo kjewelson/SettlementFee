@@ -1,9 +1,15 @@
 using Legacy.Quotes;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
 var connectionString = Environment.GetEnvironmentVariable("LEGACY_DB");
+
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("LEGACY_DB is not set.");
